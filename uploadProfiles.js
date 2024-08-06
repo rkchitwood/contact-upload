@@ -255,7 +255,7 @@ async function extractProfileData(profileUrl, page){
             if (textSpans.length === 5) {
                 //location for role
                 role.title = await textSpans[0].textContent();
-                role.description = await textSpans[4].textContent();;
+                if (textSpans[4]) role.description = await textSpans[4].textContent();;
                 role.company = removeDots(await textSpans[1].textContent());
                 const [startDate, endDate] = formatTenure(await textSpans[2].textContent());
                 role.startDate = startDate;
@@ -263,7 +263,7 @@ async function extractProfileData(profileUrl, page){
             } else {
                 // no location for role:
                 role.title = await textSpans[0].textContent();
-                role.description = await textSpans[3].textContent();;
+                if (textSpans[3]) role.description = await textSpans[3].textContent();;
                 role.company = removeDots(await textSpans[1].textContent());
                 const [startDate, endDate] = formatTenure(await textSpans[2].textContent());
                 role.startDate = startDate;
@@ -284,7 +284,6 @@ async function extractProfileData(profileUrl, page){
         educationRecord.schoolName = await textSpans[0].textContent();
         if (textSpans[1]) educationRecord.degree = await textSpans[1].textContent();
         if (textSpans[2]) {
-            console.log("textspans[2] = ", await textSpans[2].textContent())
             const [startYear, endYear] = formatDateYear(await textSpans[2].textContent());
             educationRecord.startYear = startYear;
             educationRecord.endYear = endYear;
@@ -354,7 +353,10 @@ async function uploadProfiles(){
       const profileUrls = await parseCsv(csvPath);
       
       // hard coded 1 profile for testing
-      const data = await extractProfileData(profileUrls[0], page);
+      for (let profile of profileUrls) {
+        const data = await extractProfileData(profile, page);
+      }
+      //const data = await extractProfileData(profileUrls[0], page);
       
       // TODO:
       // iterate through profiles
