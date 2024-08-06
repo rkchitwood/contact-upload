@@ -232,7 +232,7 @@ async function extractProfileData(profileUrl, page){
                 if (textSpans.length === 4) {
                     // location for role
                     role.title = await textSpans[0].textContent();
-                    role.description = await textSpans[3].textContent();
+                    if (textSpans[3]) role.description = await textSpans[3].textContent();
                     role.company = companyName;
                     const [startDate, endDate] = formatTenure(await textSpans[1].textContent());
                     role.startDate = startDate;
@@ -240,7 +240,7 @@ async function extractProfileData(profileUrl, page){
                 } else {
                     // no location for role
                     role.title = await textSpans[0].textContent();
-                    role.description = await textSpans[2].textContent();
+                    if (textSpans[2]) role.description = await textSpans[2].textContent();
                     role.company = companyName;
                     const [startDate, endDate] = formatTenure(await textSpans[1].textContent());
                     role.startDate = startDate;
