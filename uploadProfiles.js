@@ -49,7 +49,7 @@ async function loginToLinkedIn(page){
     await page.waitForSelector('#password');
     await page.fill('#username', LI_EMAIL);
     await page.fill('#password', LI_PASSWORD);
-    // BUG: Sign in with apple ID not ignored
+    // BUG: "Sign in with apple ID" not ignored and prioritized
     await page.click('button:has-text("Sign in")');
 }
 
@@ -82,7 +82,11 @@ function parseCsv(path){
     });
 }
 
-/** hellper function to format first and last name from full name and returns as array [firstName, lastName] */
+/**
+ *  helper function to format first and last name from full name and returns as array [firstName, lastName] 
+ * "John Smith" => ["John", "Smith"]
+ * "Dr. Jane Doe, CPA" => ["Jane", "Doe"]
+*/
 function formatName(fullName) {
 
     // removes common prefixes and suffixes
@@ -108,7 +112,11 @@ function formatName(fullName) {
     if (splitName.length > 2) return [splitName.slice(0, splitName.length - 1).join(' '), splitName[splitName.length - 1]];
 }
 
-/** helper function to format location as array [city, state, country] */
+/**
+ *  helper function to format location as array [city, state, country] 
+ *  "city, state, country" => ["city", "state", "country"]
+ *  "metro city area" => ["metro city area", undefined, undefined]
+ */
 function formatLocation(locationStr) {
     const splitLocation = locationStr.split(", ");
     // handle metro city areas, profiles that only have country and non-US locations (no state)
@@ -121,7 +129,10 @@ function formatLocation(locationStr) {
     return splitLocation;
 }
 
-/** helper function to take array of unlabeled anchor links and return as object { email, URL }*/
+/** 
+ * helper function to accept array of unlabeled anchor links and return as object with appropriately labeled { email, URL } 
+ * [href, href] => {email: "email", URL: "linkedin URL"}
+*/
 function parseContactData(anchorLinks){
     const contact = {};
     for (link of anchorLinks) {
@@ -134,7 +145,10 @@ function parseContactData(anchorLinks){
     return contact;
 }
 
-/** helper functin to format tenure dates and return as [startDate, endDate] */
+/** 
+ * helper functin to format tenure dates and return as [startDate, endDate] 
+ * "MMM YYYY - MMM YYYY · ..." => ["MMM YYYY", "MMM YYYY"]
+*/
 function formatTenure(tenureString) {
     const tenureArray = tenureString.split(" - ");
     tenureArray[1] = removeDots(tenureArray[1]);
@@ -142,7 +156,10 @@ function formatTenure(tenureString) {
     return tenureArray;
 }
 
-/** helper function to format dates and return as [startDate, endDate] and remove months if present */
+/** 
+ * helper function to format dates and return as [startDate, endDate] and remove months if present 
+ * "MMM YYYY - MMM YYYY" => ["YYYY", "YYYY"]
+ */
 function formatDateYear(dateString) {
     // remove dash and dots if present and convert to array
     const formattedDates = [];
@@ -158,7 +175,10 @@ function formatDateYear(dateString) {
     return formattedDates;
 }
 
-/** helper function to extract the dot from company strings */
+/** 
+ * helper function to remove the dot from company strings
+ * "MMM YYYY - MMM YYYY · ..." => "MMM YYYY - MMM YYYY"
+ */
 function removeDots(input) {
     const separatorIndex = input.indexOf(' · ');
     if (separatorIndex !== -1) {
@@ -232,6 +252,7 @@ async function extractProfileData(profileUrl, page){
                 if (textSpans.length === 4) {
                     // location for role
                     role.title = await textSpans[0].textContent();
+                    // description not required
                     if (textSpans[3]) role.description = await textSpans[3].textContent();
                     role.company = companyName;
                     const [startDate, endDate] = formatTenure(await textSpans[1].textContent());
@@ -240,6 +261,7 @@ async function extractProfileData(profileUrl, page){
                 } else {
                     // no location for role
                     role.title = await textSpans[0].textContent();
+                    // description not required
                     if (textSpans[2]) role.description = await textSpans[2].textContent();
                     role.company = companyName;
                     const [startDate, endDate] = formatTenure(await textSpans[1].textContent());
@@ -255,6 +277,7 @@ async function extractProfileData(profileUrl, page){
             if (textSpans.length === 5) {
                 //location for role
                 role.title = await textSpans[0].textContent();
+                // description not required
                 if (textSpans[4]) role.description = await textSpans[4].textContent();;
                 role.company = removeDots(await textSpans[1].textContent());
                 const [startDate, endDate] = formatTenure(await textSpans[2].textContent());
@@ -263,6 +286,7 @@ async function extractProfileData(profileUrl, page){
             } else {
                 // no location for role:
                 role.title = await textSpans[0].textContent();
+                // description not required
                 if (textSpans[3]) role.description = await textSpans[3].textContent();;
                 role.company = removeDots(await textSpans[1].textContent());
                 const [startDate, endDate] = formatTenure(await textSpans[2].textContent());
@@ -353,10 +377,10 @@ async function uploadProfiles(){
       const profileUrls = await parseCsv(csvPath);
       
       // hard coded 1 profile for testing
-      for (let profile of profileUrls) {
-        const data = await extractProfileData(profile, page);
-      }
-      //const data = await extractProfileData(profileUrls[0], page);
+    //   for (let profile of profileUrls) {
+    //     const data = await extractProfileData(profile, page);
+    //   }
+      const data = await extractProfileData(profileUrls[0], page);
       
       // TODO:
       // iterate through profiles
